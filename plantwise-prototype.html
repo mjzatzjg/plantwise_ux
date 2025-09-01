@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PlantWise - 植物识别应用原型</title>
+    <style>
+        /* CSS Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #F5F5F5;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Design System Variables */
+        :root {
+            --primary-green: #4CAF50;
+            --light-green: #E8F5E9;
+            --accent-orange: #FF9800;
+            --white: #FFFFFF;
+            --dark-gray: #333333;
+            --medium-gray: #666666;
+            --light-gray: #F5F5F5;
+            --success-color: #4CAF50;
+            --warning-color: #FF9800;
+            --error-color: #F44336;
+            --border-radius: 8px;
+            --border-radius-large: 12px;
+            --border-radius-xl: 16px;
+            --shadow-small: 0 2px 8px rgba(0,0,0,0.1);
+            --shadow-medium: 0 4px 12px rgba(0,0,0,0.15);
+            --shadow-large: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        /* Container and Layout */
+        .app-container {
+            max-width: 414px;
+            margin: 0 auto;
+            background: var(--white);
+            min-height: 100vh;
+            position: relative;
+            box-shadow: var(--shadow-large);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Header */
+        .header {
+            height: 64px;
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-green);
+            border-radius: 50% 10%;
+            position: relative;
+        }
+
+        .logo::before {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 12px;
+            background: #2E7D32;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        .profile-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--light-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            margin: 16px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            height: 48px;
+            background: var(--light-gray);
+            border: none;
+            border-radius: 24px;
+            padding: 0 50px 0 20px;
+            font-size: 16px;
+            outline: none;
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .search-input:focus {
+            background: var(--white);
+            box-shadow: 0 0 0 2px var(--primary-green);
+            transform: scale(1.02);
+        }
+
+        .search-button {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 32px;
+            height: 32px;
+            background: var(--accent-orange);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+
+        .search-button:active {
+            transform: translateY(-50%) scale(0.9);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            justify-content: space-around;
+            padding: 32px 16px;
+            gap: 16px;
+        }
+
+        .quick-action {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--dark-gray);
+        }
+
+        .quick-action-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .quick-action:active .quick-action-icon {
+            transform: scale(0.95);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .quick-action-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--medium-gray);
+        }
+
+        /* Recommended Section */
+        .section {
+            margin: 32px 0;
+        }
+
+        .section-header {
+            padding: 0 16px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--dark-gray);
+        }
+
+        .section-link {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        /* Plant Cards Carousel */
+        .plants-carousel {
+            padding-left: 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .plants-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .plants-row {
+            display: flex;
+            gap: 16px;
+            padding-bottom: 16px;
+        }
+
+        .plant-card {
+            min-width: 280px;
+            background: var(--white);
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-small);
+            overflow: hidden;
+            transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .plant-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .plant-card:active {
+            transform: translateY(-2px);
+            transition-duration: 100ms;
+        }
+
+        .plant-image {
+            width: 100%;
+            height: 140px;
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: var(--primary-green);
+        }
+
+        .plant-info {
+            padding: 16px;
+        }
+
+        .plant-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 4px;
+        }
+
+        .plant-description {
+            font-size: 14px;
+            color: var(--medium-gray);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .add-button {
+            width: 100%;
+            height: 36px;
+            background: transparent;
+            border: 2px solid var(--primary-green);
+            color: var(--primary-green);
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+
+        .add-button:active {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            height: 84px;
+            background: var(--white);
+            border-top: 1px solid #E0E0E0;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #999999;
+            text-decoration: none;
+            transition: all 200ms ease;
+        }
+
+        .tab-item.active {
+            color: var(--primary-green);
+            transform: scale(1.1);
+        }
+
+        .tab-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .tab-text {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Camera Tab Special */
+        .tab-camera {
+            position: relative;
+        }
+
+        .tab-camera .tab-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--accent-orange), #FFB74D);
+            border-radius: 50%;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+            color: white;
+            font-size: 28px;
+            margin-bottom: 8px;
+            border: 4px solid var(--white);
+        }
+
+        .tab-camera .tab-text {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+            min-height: calc(100vh - 148px);
+            padding-bottom: 100px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Camera Page */
+        .camera-page {
+            background: #000;
+            color: white;
+            position: relative;
+        }
+
+        .camera-preview {
+            width: 100%;
+            height: calc(100vh - 84px);
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            position: relative;
+        }
+
+        .camera-controls {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .camera-control-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 200ms ease;
+        }
+
+        .camera-control-btn:active {
+            transform: scale(0.9);
+        }
+
+        .camera-shutter {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 80px;
+            background: var(--accent-orange);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            transition: all 200ms ease;
+            box-shadow: 0 4px 16px rgba(255, 152, 0, 0.4);
+        }
+
+        .camera-shutter:active {
+            transform: translateX(-50%) scale(0.9);
+        }
+
+        /* Garden Page */
+        .member-status {
+            background: var(--light-green);
+            margin: 16px;
+            padding: 16px;
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .member-info {
+            color: var(--dark-gray);
+            font-weight: 500;
+        }
+
+        .upgrade-btn {
+            background: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .plants-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            padding: 0 16px;
+        }
+
+        .garden-plant-card {
+            background: var(--white);
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow-small);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .health-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .health-indicator.healthy {
+            background: var(--success-color);
+        }
+
+        .health-indicator.warning {
+            background: var(--warning-color);
+        }
+
+        .garden-plant-info {
+            padding: 12px;
+        }
+
+        .garden-plant-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .last-updated {
+            font-size: 12px;
+            color: var(--medium-gray);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 64px 32px;
+            color: var(--medium-gray);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-subtext {
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .cta-button {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 200ms ease;
+        }
+
+        .cta-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Loading Animation */
+        .leaf-loader {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(45deg, var(--primary-green), #66BB6A);
+            border-radius: 50% 10%;
+            animation: leaf-spin 1s linear infinite;
+            position: relative;
+        }
+
+        .leaf-loader::before {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 20px;
+            background: #2E7D32;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+
+        @keyframes leaf-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            z-index: 1000;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            font-size: 16px;
+        }
+
+        /* Success Animation */
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(76, 175, 80, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            z-index: 1000;
+        }
+
+        .success-overlay.show {
+            display: flex;
+            animation: success-fade-in 300ms ease;
+        }
+
+        .success-check {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: var(--primary-green);
+            animation: success-scale 400ms cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 16px;
+        }
+
+        @keyframes success-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes success-scale {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive */
+        @media (max-width: 375px) {
+            .plants-row {
+                gap: 12px;
+            }
+            
+            .plant-card {
+                min-width: 260px;
+            }
+            
+            .quick-action-icon {
+                width: 56px;
+                height: 56px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>PlantWise</span>
+            <span>100%</span>
+        </div>
+
+        <!-- Header -->
+        <div class="header">
+            <div class="logo"></div>
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search for plants or issues">
+                <button class="search-button">🔍</button>
+            </div>
+            <div class="profile-avatar">U</div>
+        </div>
+
+        <!-- Home Page -->
+        <div class="page active" id="home-page">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <a href="#" class="quick-action" onclick="switchToTab('camera')">
+                    <div class="quick-action-icon">📷</div>
+                    <div class="quick-action-text">扫描植物</div>
+                </a>
+                <a href="#" class="quick-action" onclick="switchToTab('garden')">
+                    <div class="quick-action-icon">🌱</div>
+                    <div class="quick-action-text">我的花园</div>
+                </a>
+                <a href="#" class="quick-action" onclick="showAIChat()">
+                    <div class="quick-action-icon">🤖</div>
+                    <div class="quick-action-text">AI助手</div>
+                </a>
+            </div>
+
+            <!-- Recommended Plants -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">推荐植物</h2>
+                    <a href="#" class="section-link">查看更多</a>
+                </div>
+                <div class="plants-carousel">
+                    <div class="plants-row">
+                        <div class="plant-card" onclick="showPlantDetail('玫瑰')">
+                            <div class="plant-image">🌹</div>
+                            <div class="plant-info">
+                                <div class="plant-name">玫瑰</div>
+                                <div class="plant-description">美丽的观赏花卉，香味浓郁</div>
+                                <button class="add-button" onclick="event.stopPropagation(); addToGarden('玫瑰')">添加到花园</button>
+                            </div>
+                        </div>
+                        <div class="plant-card" onclick="showPlantDetail('薰衣草')">
+                            <div class="plant-image">🌾</div>
+                            <div class="plant-info">
+                                <div class="plant-name">薰衣草</div>
+                                <div class="plant-description">芳香植物，具有放松效果</div>
+                                <button class="add-button" onclick="event.stopPropagation(); addToGarden('薰衣草')">添加到花园</button>
+                            </div>
+                        </div>
+                        <div class="plant-card" onclick="showPlantDetail('向日葵')">
+                            <div class="plant-image">🌻</div>
+                            <div class="plant-info">
+                                <div class="plant-name">向日葵</div>
+                                <div class="plant-description">阳光植物，向阳而生</div>
+                                <button class="add-button" onclick="event.stopPropagation(); addToGarden('向日葵')">添加到花园</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Page -->
+        <div class="page camera-page" id="camera-page">
+            <div class="camera-preview">
+                📷
+                <div class="camera-controls">
+                    <button class="camera-control-btn" onclick="toggleFlash()">💡</button>
+                    <button class="camera-control-btn" onclick="openGallery()">📱</button>
+                </div>
+                <button class="camera-shutter" onclick="takePhoto()">📷</button>
+            </div>
+        </div>
+
+        <!-- Garden Page -->
+        <div class="page" id="garden-page">
+            <div class="member-status">
+                <div class="member-info">Premium Member - 30天后过期</div>
+                <button class="upgrade-btn">续费</button>
+            </div>
+            
+            <div class="plants-grid" id="garden-plants">
+                <!-- Plants will be added here dynamically -->
+            </div>
+            
+            <div class="empty-state" id="empty-garden">
+                <div class="empty-icon">🌱</div>
+                <div class="empty-text">还没有植物？</div>
+                <div class="empty-subtext">通过扫描添加你的第一株植物！</div>
+                <button class="cta-button" onclick="switchToTab('camera')">开始扫描</button>
+            </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <a href="#" class="tab-item active" onclick="switchToTab('home')">
+                <div class="tab-icon">🏠</div>
+                <div class="tab-text">首页</div>
+            </a>
+            <a href="#" class="tab-item tab-camera" onclick="switchToTab('camera')">
+                <div class="tab-icon">📷</div>
+                <div class="tab-text">拍照</div>
+            </a>
+            <a href="#" class="tab-item" onclick="switchToTab('garden')">
+                <div class="tab-icon">🌿</div>
+                <div class="tab-text">花园</div>
+            </a>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loading-overlay">
+            <div class="leaf-loader"></div>
+            <div class="loading-text">AI分析中...</div>
+        </div>
+
+        <!-- Success Overlay -->
+        <div class="success-overlay" id="success-overlay">
+            <div class="success-check">✓</div>
+            <div class="loading-text">识别成功！</div>
+        </div>
+    </div>
+
+    <script>
+        // Garden plants storage
+        let gardenPlants = [];
+
+        // Tab switching functionality
+        function switchToTab(tabName) {
+            // Update tab active state
+            document.querySelectorAll('.tab-item').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.closest('.tab-item').classList.add('active');
+
+            // Update page visibility
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(tabName + '-page').classList.add('active');
+
+            // Update garden display
+            if (tabName === 'garden') {
+                updateGardenDisplay();
+            }
+        }
+
+        // Camera functionality
+        function takePhoto() {
+            // Show loading
+            document.getElementById('loading-overlay').classList.add('show');
+            
+            // Simulate AI processing
+            setTimeout(() => {
+                document.getElementById('loading-overlay').classList.remove('show');
+                document.getElementById('success-overlay').classList.add('show');
+                
+                setTimeout(() => {
+                    document.getElementById('success-overlay').classList.remove('show');
+                    // Simulate plant identification result
+                    showPlantDetail('识别的植物');
+                }, 2000);
+            }, 3000);
+        }
+
+        function toggleFlash() {
+            const flashBtn = event.target;
+            flashBtn.style.background = flashBtn.style.background === 'rgba(255, 152, 0, 0.8)' 
+                ? 'rgba(0, 0, 0, 0.5)' 
+                : 'rgba(255, 152, 0, 0.8)';
+        }
+
+        function openGallery() {
+            alert('打开图片库功能');
+        }
+
+        // Add plant to garden
+        function addToGarden(plantName) {
+            const plant = {
+                name: plantName,
+                health: Math.random() > 0.3 ? 'healthy' : 'warning',
+                lastUpdated: '今天',
+                emoji: getPlantEmoji(plantName)
+            };
+            
+            gardenPlants.push(plant);
+            
+            // Show success feedback
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '已添加！';
+            button.style.background = '#4CAF50';
+            button.style.color = 'white';
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = 'transparent';
+                button.style.color = '#4CAF50';
+            }, 2000);
+            
+            updateGardenDisplay();
+        }
+
+        // Get plant emoji
+        function getPlantEmoji(plantName) {
+            const emojiMap = {
+                '玫瑰': '🌹',
+                '薰衣草': '🌾',
+                '向日葵': '🌻',
+                '识别的植物': '🌱'
+            };
+            return emojiMap[plantName] || '🌿';
+        }
+
+        // Update garden display
+        function updateGardenDisplay() {
+            const gardenContainer = document.getElementById('garden-plants');
+            const emptyState = document.getElementById('empty-garden');
+            
+            if (gardenPlants.length === 0) {
+                gardenContainer.style.display = 'none';
+                emptyState.style.display = 'block';
+            } else {
+                gardenContainer.style.display = 'grid';
+                emptyState.style.display = 'none';
+                
+                gardenContainer.innerHTML = gardenPlants.map(plant => `
+                    <div class="garden-plant-card" onclick="showPlantDetail('${plant.name}')">
+                        <div class="plant-image">${plant.emoji}</div>
+                        <div class="health-indicator ${plant.health}"></div>
+                        <div class="garden-plant-info">
+                            <div class="garden-plant-name">${plant.name}</div>
+                            <div class="last-updated">更新于 ${plant.lastUpdated}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Show plant detail (placeholder)
+        function showPlantDetail(plantName) {
+            alert(`显示 ${plantName} 的详细信息页面`);
+        }
+
+        // Show AI chat (placeholder)
+        function showAIChat() {
+            alert('打开AI园林管家聊天界面');
+        }
+
+        // Search functionality
+        document.querySelector('.search-input').addEventListener('focus', function() {
+            this.placeholder = '';
+        });
+
+        document.querySelector('.search-input').addEventListener('blur', function() {
+            if (!this.value) {
+                this.placeholder = 'Search for plants or issues';
+            }
+        });
+
+        document.querySelector('.search-button').addEventListener('click', function() {
+            const query = document.querySelector('.search-input').value;
+            if (query) {
+                alert(`搜索: ${query}`);
+            }
+        });
+
+        // Touch feedback for buttons
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.matches('.quick-action-icon, .plant-card, .add-button, .cta-button')) {
+                e.target.style.transform = 'scale(0.95)';
+            }
+        });
+
+        document.addEventListener('touchend', function(e) {
+            if (e.target.matches('.quick-action-icon, .plant-card, .add-button, .cta-button')) {
+                setTimeout(() => {
+                    e.target.style.transform = '';
+                }, 100);
+            }
+        });
+
+        // Initialize garden display
+        updateGardenDisplay();
+
+        // Prevent context menu on long press
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Prevent zooming
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
